@@ -34,6 +34,7 @@ pub struct Proof<E: PairingEngine> {
     pub commit_poly_q: E::G1Affine,        // commitment of Q(s)
     pub commit_poly_d: E::G1Affine,        // commitment of D(s)
     pub commit_poly_f: E::G1Affine,        // commitment of F(s)
+    pub commit_poly_x: E::G2Affine,        // commitment of s in G2
     pub commit_s_minus_gamma: E::G2Affine, // commitment of [s - gamma]_2
     pub commit_value_b_gamma: E::G1Affine, // commitment of B_gamma = B(gamma
     pub value_b_gamma: E::Fr,              // value of B(s) at gamma

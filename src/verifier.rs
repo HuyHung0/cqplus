@@ -38,7 +38,8 @@ pub fn verify<E: PairingEngine>(
     let pair_4 = E::pairing(pair_4_1, pair_4_2);
 
     let rhs_1 = proof.commit_poly_r_c.mul(proof.value_eta).into();
-    let rhs_2 = vk.commit_1;
+    // commit to poly_x
+    let rhs_2 = proof.commit_poly_x;
     let rhs = E::pairing(rhs_1, rhs_2);
 
     let lhs = pair_1 * pair_2 * pair_3.inverse().unwrap() * pair_4.inverse().unwrap();

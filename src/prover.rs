@@ -69,7 +69,7 @@ pub fn prove<E: PairingEngine>(
 
     // Compute the Lagrange basis polynomials and the vanishing polynomial over K and H
     let poly_lagrange_k = polynomials::poly_lagrange_basis_all(&set_k);
-    let poly_lagrange_h = polynomials::poly_lagrange_basis_all(&set_h);
+    // let poly_lagrange_h = polynomials::poly_lagrange_basis_all(&set_h);
     let poly_vanish_k = polynomials::poly_vanish(&set_k);
     let poly_vanish_h = polynomials::poly_vanish(&set_h);
 
@@ -78,12 +78,12 @@ pub fn prove<E: PairingEngine>(
         .iter()
         .map(|poly| Kzg::<E>::commit_g1(&srs1, poly).into())
         .collect();
-    let commit_lagrange_h: Vec<E::G1Affine> = poly_lagrange_h
-        .iter()
-        .map(|poly| Kzg::<E>::commit_g1(&srs1, poly).into())
-        .collect();
+    // let commit_lagrange_h: Vec<E::G1Affine> = poly_lagrange_h
+    //     .iter()
+    //     .map(|poly| Kzg::<E>::commit_g1(&srs1, poly).into())
+    //     .collect();
     let commit_vanish_k = Kzg::<E>::commit_g1(&srs1, &poly_vanish_k).into();
-    let commit_vanish_h = Kzg::<E>::commit_g1(&srs1, &poly_vanish_h).into();
+    // let commit_vanish_h = Kzg::<E>::commit_g1(&srs1, &poly_vanish_h).into();
 
     // Compute the vector $m=(m_1,\ldot,m_N)$ where $m_i$ is the number of time that $t_i$ appears in the vector $f$.
     let m = vector_m(table_t, vector_f).unwrap();
@@ -154,7 +154,7 @@ pub fn prove<E: PairingEngine>(
     let random_rho_bx_1 = E::Fr::rand(&mut rng);
     let poly_random_rho_bx =
         DensePolynomial::from_coefficients_slice(&[random_rho_bx_0, random_rho_bx_1]);
-    let evaluate_poly_rho_bx_at_s = poly_random_rho_bx.evaluate(&secret_s);
+    // let evaluate_poly_rho_bx_at_s = poly_random_rho_bx.evaluate(&secret_s);
 
     // Compute B_j
     let mut b = vec![E::Fr::zero(); small_n];
@@ -170,11 +170,12 @@ pub fn prove<E: PairingEngine>(
     let poly_b = polynomials::poly_f(&b, &set_h, &poly_random_rho_bx);
 
     // Compute commitment $[B(s)]_1$
-    let mut commit_poly_b = E::G1Affine::zero();
-    for i in 0..small_n {
-        commit_poly_b = commit_poly_b + commit_lagrange_h[i].mul(b[i]).into();
-    }
-    commit_poly_b = commit_poly_b + commit_vanish_h.mul(evaluate_poly_rho_bx_at_s).into();
+    // let mut commit_poly_b = E::G1Affine::zero();
+    // for i in 0..small_n {
+    //     commit_poly_b = commit_poly_b + commit_lagrange_h[i].mul(b[i]).into();
+    // }
+    // commit_poly_b = commit_poly_b + commit_vanish_h.mul(evaluate_poly_rho_bx_at_s).into();
+    let commit_poly_b = Kzg::<E>::commit_g1(&srs1, &poly_b).into();
 
     // Compute polynomial $Q_B(X) = (B(X)(F(X)+\beta)-1)/\nu_H(X)$
     // First, compute poly_f
@@ -300,6 +301,11 @@ pub fn prove<E: PairingEngine>(
         + commit_poly_q_c.mul(eta).into()
         + commit_poly_q_part3.mul(-eta * eta).into();
 
+    let poly_x = DensePolynomial::from_coefficients_slice(&[E::Fr::zero(), E::Fr::one()]);
+    // commit to poly_x
+    let commit_poly_x = Kzg::<E>::commit_g2(&srs2, &poly_x).into();
+
+
     Ok(Proof {
         commit_poly_m,
         commit_poly_s: commit_poly_s_s,
@@ -311,6 +317,7 @@ pub fn prove<E: PairingEngine>(
         commit_poly_q,
         commit_poly_d,
         commit_poly_f,
+        commit_poly_x,
         commit_s_minus_gamma,
         commit_value_b_gamma,
         value_b_gamma: b_gamma,
