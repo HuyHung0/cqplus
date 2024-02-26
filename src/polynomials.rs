@@ -88,10 +88,9 @@ pub fn poly_u<F: FftField>(n: usize) -> DensePolynomial<F> {
     DensePolynomial::from_coefficients_vec(coefficients)
 }
 
-/// poly_t = $T(X)$, is the encoded polynomial of the table $t = ( t_j )_{j=1}^{N}$ over a group K with $|K|=N$.
-///
-/// It is defined as $T(X)=\sum_{i=1}^N t_j \lambda_j^K(X)$, where $\lambda_j^K(X)$ is the $j$-th Lagrange basis polynomial over $K$.
-/// There is another way to compute $T(X)$: inverse fast fourier transform (IFFT) of the table $t$ over $K$.
+/// $$T(X)=\sum_{i=1}^N t_j \lambda_j^K(X),$$
+/// where $\lambda_j^K(X)$ is the $j$-th Lagrange basis polynomial over $K$. Remind that poly_t = $T(X)$ is the encoded polynomial of the table $t = \\{ t_j \\}_{j=1}^{N}$ over a group K with $|K|=N$.
+/// There is a way to compute $T(X)$ using inverse fast fourier transform (IFFT) of the table $t$ over $K$ using one function. However, we use formula of $T(X)$ to compute it.
 pub fn poly_t<F: FftField>(table: &Table<F>, set: &[F]) -> DensePolynomial<F> {
     // Create a zero polynomial
     let mut t = DensePolynomial::from_coefficients_slice(&[F::zero()]);
@@ -106,7 +105,7 @@ pub fn poly_t<F: FftField>(table: &Table<F>, set: &[F]) -> DensePolynomial<F> {
     t
 }
 
-/// poly_f = $f(X)=\sum_{i=1}^n f_i \lambda_i^H(X) + \rho_F(X).\nu_H(X)$, where $\lambda_i^H(X)$ is the $i$-th Lagrange basis polynomial over $H$, $\rho_F(X)$ is a random polynomial.
+/// $$f(X)=\sum_{i=1}^n f_i \lambda_i^H(X) + \rho_F(X).\nu_H(X),$$ where $\lambda_i^H(X)$ is the $i$-th Lagrange basis polynomial over $H$, $\rho_F(X)$ is a random polynomial.
 pub fn poly_f<F: FftField>(
     vector_f: &Vec<F>,
     set: &[F],
@@ -132,7 +131,7 @@ pub fn poly_random<F: FftField>(degree: usize) -> DensePolynomial<F> {
     DensePolynomial::from_coefficients_vec(coefficients)
 }
 
-/// poly_m = $m(X)=\sum_{i=1}^N m_i \lambda_i^K(X) + \rho_m \vu_K(X)$,
+/// $$m(X)=\sum_{i=1}^N m_i \lambda_i^K(X) + \rho_m \nu_K(X),$$
 /// where $\lambda_i^K(X)$ is the $i$-th Lagrange basis polynomial over $K$,
 /// $\rho_m$ is a random element in the finite field,
 /// $\vu_K(X)$ is the vanishing polynomial on the set $K$.
