@@ -124,7 +124,7 @@ pub fn derive<E: PairingEngine>(
 ) -> (EvaluationKey<E>, VerificationKey<E>, E::G2Affine, E::Fr) {
     let mut debug_number = 0;
 
-    let big_n1 = srs1.len();
+    let big_n1 = srs1.len()-1;
     // let big_n2 = srs2.len();
 
     debug_number += 1; // 1
