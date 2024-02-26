@@ -82,9 +82,9 @@ pub fn poly_lagrange_basis_all<F: FftField>(set: &[F]) -> Vec<DensePolynomial<F>
 
 /// If a set is a subgroup of size n in a finite field, the vanishing polynomial on this set is poly_u = $U(X) = X^n-1$
 pub fn poly_u<F: FftField>(n: usize) -> DensePolynomial<F> {
-    let mut coefficients = vec![F::zero(); n];
+    let mut coefficients = vec![F::zero(); n+1];
     coefficients[0] = -F::one();
-    coefficients[n - 1] = F::one();
+    coefficients[n] = F::one();
     DensePolynomial::from_coefficients_vec(coefficients)
 }
 
