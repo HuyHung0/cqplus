@@ -122,13 +122,9 @@ pub fn derive<E: PairingEngine>(
     big_n: usize,
     small_n: usize,
 ) -> (EvaluationKey<E>, VerificationKey<E>, E::G2Affine, E::Fr) {
-    let mut debug_number = 0;
 
     let big_n1 = srs1.len()-1;
     // let big_n2 = srs2.len();
-
-    debug_number += 1; // 1
-    dbg!(debug_number);
 
     let set_k = GeneralEvaluationDomain::<E::Fr>::new(big_n).unwrap();
     let set_h = GeneralEvaluationDomain::<E::Fr>::new(small_n).unwrap();
@@ -139,9 +135,6 @@ pub fn derive<E: PairingEngine>(
     let poly_rk = poly_rk(&set_k, big_n1, big_n);
     let poly_rh = poly_rh(&set_k, &set_h, big_n1, big_n, small_n);
     let poly_q_j = poly_q_j(&table, &set_k, &set_h, big_n1, big_n, small_n);
-
-    debug_number += 1; // 2
-    dbg!(debug_number);
 
     let commit_poly_rk: Vec<E::G1Affine> = poly_rk
         .iter()
@@ -160,8 +153,6 @@ pub fn derive<E: PairingEngine>(
     let commit_poly_u = Kzg::<E>::commit_g1(&srs1, &poly_u).into();
     let commit_poly_u2 = Kzg::<E>::commit_g2(&srs2, &poly_u).into();
 
-    debug_number += 1; // 3
-    dbg!(debug_number);
 
     let poly_v = polynomials::poly_vanish(&set_k);
     let commit_poly_v = Kzg::<E>::commit_g1(&srs1, &poly_v).into();
@@ -173,34 +164,27 @@ pub fn derive<E: PairingEngine>(
     let commit_poly_t = Kzg::<E>::commit_g1(&srs1, &poly_t).into();
     let commit_poly_t2 = Kzg::<E>::commit_g2(&srs2, &poly_t).into();
 
-    debug_number += 1; // 4
-    dbg!(debug_number);
 
     // Verification Key
     let poly_1 = polynomials::poly_1();
     let commit_1 = Kzg::<E>::commit_g2(&srs2, &poly_1).into();
 
-    debug_number += 1; // 5
-    dbg!(debug_number);
+
 
     let poly_vanish_k_minus_h = poly_vanish_k_minus_h(&set_k, &set_h);
     let poly_zu = &poly_vanish_k_minus_h * &poly_u;
     let commit_poly_zu2 = Kzg::<E>::commit_g2(&srs2, &poly_zu).into();
 
-    debug_number += 1; // 6
-    dbg!(debug_number);
+   
 
     let poly_vu = &poly_v * &poly_u;
     let commit_poly_vu2 = Kzg::<E>::commit_g2(&srs2, &poly_vu).into();
 
-    debug_number += 1; // 7
-    dbg!(debug_number);
-
+    
     let poly_tu = &poly_t * &poly_u;
     let commit_poly_tu2 = Kzg::<E>::commit_g2(&srs2, &poly_tu).into();
 
-    debug_number += 1; // 8
-    dbg!(debug_number);
+
 
     let v1 = big_n / small_n;
     let mut value_vartheta = E::Fr::zero();
