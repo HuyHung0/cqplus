@@ -45,7 +45,7 @@ mod tests {
     ) {
         // Generate random and srs
         let secret_s = E::Fr::rand(rng);
-        let (srs1, srs2) = srs::unsafe_setup_from_tau::<E>(big_n1, big_n2, secret_s);
+        let (srs1, srs2) = srs::unsafe_setup_from_s::<E>(big_n1, big_n2, secret_s);
 
         let table_values: Vec<_> = (0..big_n).map(|_| E::Fr::rand(rng)).collect();
         let table_t = Table::new(&table_values).unwrap();

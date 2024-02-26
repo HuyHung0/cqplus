@@ -51,7 +51,7 @@ pub fn prove<E: PairingEngine>(
     vector_f: &Vec<E::Fr>,
 ) -> Result<Proof<E>, Error> {
     // Create srs
-    let (srs1, srs2) = srs::unsafe_setup_from_tau::<E>(big_n1, big_n2, secret_s);
+    let (srs1, srs2) = srs::unsafe_setup_from_s::<E>(big_n1, big_n2, secret_s);
 
     // get the values N and n
     let big_n = table_t.size;
