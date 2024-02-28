@@ -42,31 +42,31 @@ pub fn poly_1<F: FftField>() -> DensePolynomial<F> {
     DensePolynomial::from_coefficients_slice(&[F::one()])
 }
 
-/// Return a vector containing all the Lagrange basis polynomials over a set. Index from 0 to #set - 1.
-pub fn poly_lagrange_basis_all<F: FftField>(set: &[F]) -> Vec<DensePolynomial<F>> {
-    // create a new empty vector with pre-allocated capacity to store set.len() elements
+/// Return a vector containing all the Lagrange basis polynomials over a evaluation_domain. Index from 0 to #evaluation_domain - 1.
+pub fn poly_lagrange_basis_all<F: FftField>(evaluation_domain: &[F]) -> Vec<DensePolynomial<F>> {
+    // create a new empty vector with pre-allocated capacity to store evaluation_domain.len() elements
     // This vector will be used to store all the Lagrange basis polynomials
-    let mut list_lagrange_polys = Vec::with_capacity(set.len());
+    let mut list_lagrange_polys = Vec::with_capacity(evaluation_domain.len());
 
-    // index from 0 to set.len()-1
-    for i in 0..set.len() {
+    // index from 0 to evaluation_domain.len()-1
+    for i in 0..evaluation_domain.len() {
         // l_i = 1
         let mut l_i = DensePolynomial::from_coefficients_slice(&[F::one()]);
         // DensePolynomial::from_coefficients_slice: Create a new polynomial from a list of coefficients.
         // the coefficient of $x^i$ is stored at location i in self.coeffs
 
-        // x_i is the i-th element of the set
-        let x_i = set[i];
+        // x_i is the i-th element of the evaluation_domain
+        let x_i = evaluation_domain[i];
 
-        // j iterates through the set
-        for (j, _) in set.iter().enumerate() {
+        // j iterates through the evaluation_domain
+        for (j, _) in evaluation_domain.iter().enumerate() {
             if j != i {
                 // xi_minus_xj_inv = 1/(xi - xj)
-                let xi_minus_xj_inv = (x_i - set[j]).inverse().unwrap();
+                let xi_minus_xj_inv = (x_i - evaluation_domain[j]).inverse().unwrap();
 
                 l_i = &l_i
                     * &DensePolynomial::from_coefficients_slice(&[
-                        -set[j] * xi_minus_xj_inv,
+                        -evaluation_domain[j] * xi_minus_xj_inv,
                         xi_minus_xj_inv,
                     ]);
                 // Coeff of x^0: -xj/(xi-xj)
@@ -149,9 +149,10 @@ pub fn poly_m<F: FftField>(vector_m: &Vec<F>, set_k: &[F], rho_m: F) -> DensePol
 }
 #[cfg(test)]
 pub mod test_polynomials{
-    use ark_ff::One;
-    use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
+    use ark_ff::{Zero, One};
+    use ark_poly::{Polynomial, EvaluationDomain, GeneralEvaluationDomain};
     use ark_bn254::Fr;
+    
     #[test]
     /// Check if in a GeneralEvaluationDomain from ark-poly, the elements are the corresponding powers of the generator (which is the element at index 1)
     fn test_evaluation_domain(){
@@ -165,8 +166,7 @@ pub mod test_polynomials{
         let g = set[1];
         println!("Let choose the element at index 1 as the generator:");
 
-
-
+        // Check if the elements are the corresponding powers of the generator
         let mut id = Fr::one();
         for i in 1..n{
             id = id * g;
@@ -191,6 +191,33 @@ pub mod test_polynomials{
             println!("Element at index 0 is the field identity element");
         } else {
             panic!("Element at index 0 is not the field identity element")
+        }
+    }
+
+    #[test]
+    fn test_poly_lagrange_basis_all(){
+        let n = 4;
+        let domain = GeneralEvaluationDomain::<Fr>::new(n).unwrap();
+        
+        let set:Vec<Fr> = domain.elements().collect();
+        let list_lagrange_polys = super::poly_lagrange_basis_all(&set);
+
+        for (i, l_i) in list_lagrange_polys.iter().enumerate(){
+            for (j, x_j) in set.iter().enumerate(){
+                if i == j{
+                    if l_i.evaluate(x_j) == Fr::one(){
+                        println!("l_{i}(x_{j}) = 1");
+                    } else {
+                        panic!("l_{i}(x_{j}) != 1");
+                    }
+                } else {
+                    if l_i.evaluate(x_j) == Fr::zero(){
+                        println!("l_{i}(x_{j}) = 0");
+                    } else {
+                        panic!("l_{i}(x_{j}) != 0");
+                    }
+                }
+            }
         }
     }
 }
