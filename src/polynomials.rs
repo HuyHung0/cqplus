@@ -6,10 +6,7 @@ use ark_ff::FftField;
 
 use crate::table::Table;
 
-use ark_poly::{
-    univariate::DensePolynomial,
-    UVPolynomial,
-};
+use ark_poly::{univariate::DensePolynomial, UVPolynomial};
 // DensePolynomial: polynomial written in the form of its coefficients including zero coefficient.
 
 /// Vanishing polynomial on a set
@@ -85,7 +82,7 @@ pub fn poly_lagrange_basis_all<F: FftField>(evaluation_domain: &[F]) -> Vec<Dens
 /// $$U(X)=X^n-1$$
 /// The vanishing polynomial on a subgroup of order n in a finite field equal $U(X) = X^n-1$.
 pub fn poly_u<F: FftField>(n: usize) -> DensePolynomial<F> {
-    let mut coefficients = vec![F::zero(); n+1];
+    let mut coefficients = vec![F::zero(); n + 1];
     coefficients[0] = -F::one();
     coefficients[n] = F::one();
     DensePolynomial::from_coefficients_vec(coefficients)
@@ -148,46 +145,49 @@ pub fn poly_m<F: FftField>(vector_m: &Vec<F>, set_k: &[F], rho_m: F) -> DensePol
     result
 }
 #[cfg(test)]
-pub mod test_polynomials{
-    use ark_ff::{One, UniformRand, Zero};
-    use ark_poly::{Polynomial, EvaluationDomain, GeneralEvaluationDomain};
+pub mod test_polynomials {
     use ark_bn254::Fr;
-    
+    use ark_ff::{FftField, One, UniformRand, Zero};
+    use ark_poly::{
+        univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
+        UVPolynomial,
+    };
+
     #[test]
     /// Check if in a GeneralEvaluationDomain from ark-poly, the elements are the corresponding powers of the generator (which is the element at index 1)
-    fn test_evaluation_domain(){
+    fn test_evaluation_domain() {
         let n = 8;
         let domain = GeneralEvaluationDomain::<Fr>::new(n).unwrap();
-        
+
         // Convert into vector
-        let set:Vec<Fr> = domain.elements().collect();
-        
+        let set: Vec<Fr> = domain.elements().collect();
+
         // Get the generator at index 1
         let g = set[1];
         println!("Let choose the element at index 1 as the generator:");
 
         // Check if the elements are the corresponding powers of the generator
         let mut id = Fr::one();
-        for i in 1..n{
+        for i in 1..n {
             id = id * g;
-            if id == set[i]{
+            if id == set[i] {
                 println!("Element at index {i} is the corresponding power {i} of the generator");
             } else {
                 panic!("Element at index {i} is not the corresponding power {i} of the generator")
             }
         }
-        
+
         // Check the power n of the generator
         id = id * g;
 
-        if id == Fr::one(){
+        if id == Fr::one() {
             println!("Power {n} of the generator is the field identity element");
         } else {
             panic!("Power {n} of the generator is not the field identity element")
         }
 
         // Check the element at index 0 equals the identity element
-        if set[0] == Fr::one(){
+        if set[0] == Fr::one() {
             println!("Element at index 0 is the field identity element");
         } else {
             panic!("Element at index 0 is not the field identity element")
@@ -195,23 +195,23 @@ pub mod test_polynomials{
     }
 
     #[test]
-    fn test_poly_lagrange_basis_all(){
+    fn test_poly_lagrange_basis_all() {
         let n = 4;
         let domain = GeneralEvaluationDomain::<Fr>::new(n).unwrap();
-        
-        let set:Vec<Fr> = domain.elements().collect();
+
+        let set: Vec<Fr> = domain.elements().collect();
         let list_lagrange_polys = super::poly_lagrange_basis_all(&set);
 
-        for (i, l_i) in list_lagrange_polys.iter().enumerate(){
-            for (j, x_j) in set.iter().enumerate(){
-                if i == j{
-                    if l_i.evaluate(x_j) == Fr::one(){
+        for (i, l_i) in list_lagrange_polys.iter().enumerate() {
+            for (j, x_j) in set.iter().enumerate() {
+                if i == j {
+                    if l_i.evaluate(x_j) == Fr::one() {
                         println!("l_{i}(x_{j}) = 1");
                     } else {
                         panic!("l_{i}(x_{j}) != 1");
                     }
                 } else {
-                    if l_i.evaluate(x_j) == Fr::zero(){
+                    if l_i.evaluate(x_j) == Fr::zero() {
                         println!("l_{i}(x_{j}) = 0");
                     } else {
                         panic!("l_{i}(x_{j}) != 0");
@@ -222,31 +222,66 @@ pub mod test_polynomials{
     }
 
     #[test]
-    fn test_poly_f(){
+    fn test_poly_f() {
         let n = 4;
 
         // Create a GeneralEvaluationDomain (a group)
         let domain = GeneralEvaluationDomain::<Fr>::new(n).unwrap();
 
         // Convert into vector
-        let set:Vec<Fr> = domain.elements().collect();
-        
+        let set: Vec<Fr> = domain.elements().collect();
+
         // Create a random vector_f of size n
         let vector_f: Vec<Fr> = (0..n).map(|_| Fr::rand(&mut ark_std::test_rng())).collect();
-        
+
         // Create a random polynomial of degree 2
         let rho = super::poly_random::<Fr>(2);
-        
+
         // Compute f(X)
         let f = super::poly_f(&vector_f, &set, &rho);
-        
+
         // Compute the evaluation of f(X) at each element of the set, compare with the vector_f at the corresponding index
         for i in 0..n {
-            if f.evaluate(&set[i]) == vector_f[i]{
+            if f.evaluate(&set[i]) == vector_f[i] {
                 println!("f(set[{i}]) = vector_f{i}");
             } else {
                 panic!("f(set[{i}]) is not equal vector_f{i}");
             }
+        }
+    }
+
+    // Compute the vanishing polynomial on a set by definition
+    fn poly_vanish_old_way<F: FftField>(set: &[F]) -> DensePolynomial<F> {
+        // polynomial = 1
+        let mut polynomial = DensePolynomial::from_coefficients_slice(&[F::one()]);
+
+        // Iterate over the set
+        for (i, _) in set.iter().enumerate() {
+            let x_i = set[i];
+
+            // x_minus_xi = X-xi
+            let x_minus_xi = DensePolynomial::from_coefficients_slice(&[-x_i, F::one()]);
+
+            polynomial = &polynomial * &x_minus_xi;
+        }
+
+        // Return the vanishing polynomial
+        polynomial
+    }
+
+    #[test]
+    fn test_poly_u(){
+        let n = 4;
+        let poly_u = super::poly_u::<Fr>(n);
+        
+        let domain = GeneralEvaluationDomain::<Fr>::new(n).unwrap();
+        let set: Vec<Fr> = domain.elements().collect();
+        let vanishing_polynomial_old_way = poly_vanish_old_way(&set);
+        
+        if poly_u == vanishing_polynomial_old_way {
+            println!("The vanishing polynomial U(X) is computed correctly");
+        } else {
+            panic!("The vanishing polynomial U(X) is not computed correctly");
         }
     }
 }
