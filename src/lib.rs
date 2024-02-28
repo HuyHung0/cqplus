@@ -61,7 +61,7 @@ mod tests {
             .map(|&i| table_t.values[i])
             .collect();
 
-        let (ek, vk, commit_poly_t2, value_vartheta) =
+        let (_ek, vk, commit_poly_t2, value_vartheta) =
             derive::derive::<E>(&srs1, &srs2, &table_t, big_n, small_n);
 
         (
@@ -86,7 +86,7 @@ mod tests {
 
         let mut rng = test_rng();
 
-        let (table_t, vector_f, srs1, srs2, secret_s, vk, commit_poly_t2, value_vartheta) =
+        let (table_t, vector_f, _srs1, _srs2, secret_s, vk, commit_poly_t2, value_vartheta) =
             prepare::<Bn254, StdRng>(big_n1, big_n2, big_n, small_n, &mut rng);
 
         let proof = prover::prove::<Bn254>(secret_s, big_n1, big_n2, &table_t, &vector_f).unwrap();
