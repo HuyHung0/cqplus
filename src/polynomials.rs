@@ -149,7 +149,7 @@ pub fn poly_m<F: FftField>(vector_m: &Vec<F>, set_k: &[F], rho_m: F) -> DensePol
 }
 #[cfg(test)]
 pub mod test_polynomials{
-    use ark_ff::{Zero, One};
+    use ark_ff::{One, UniformRand, Zero};
     use ark_poly::{Polynomial, EvaluationDomain, GeneralEvaluationDomain};
     use ark_bn254::Fr;
     
@@ -217,6 +217,35 @@ pub mod test_polynomials{
                         panic!("l_{i}(x_{j}) != 0");
                     }
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn test_poly_f(){
+        let n = 4;
+
+        // Create a GeneralEvaluationDomain (a group)
+        let domain = GeneralEvaluationDomain::<Fr>::new(n).unwrap();
+
+        // Convert into vector
+        let set:Vec<Fr> = domain.elements().collect();
+        
+        // Create a random vector_f of size n
+        let vector_f: Vec<Fr> = (0..n).map(|_| Fr::rand(&mut ark_std::test_rng())).collect();
+        
+        // Create a random polynomial of degree 2
+        let rho = super::poly_random::<Fr>(2);
+        
+        // Compute f(X)
+        let f = super::poly_f(&vector_f, &set, &rho);
+        
+        // Compute the evaluation of f(X) at each element of the set, compare with the vector_f at the corresponding index
+        for i in 0..n {
+            if f.evaluate(&set[i]) == vector_f[i]{
+                println!("f(set[{i}]) = vector_f{i}");
+            } else {
+                panic!("f(set[{i}]) is not equal vector_f{i}");
             }
         }
     }
