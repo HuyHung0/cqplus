@@ -11,18 +11,21 @@ use ark_poly::{
 // use ark_bn254::Fr;
 
 use crate::{
-    data_structures::{EvaluationKey, VerificationKey},
-    kzg::Kzg,
-    polynomials,
-    table::Table,
+    data_structures::{EvaluationKey, VerificationKey},kzg::Kzg, polynomials, table::Table
 };
 
 /// Compute poly_vanish_k_minus_h, $\nu_{K\H}(X)$
 pub fn poly_vanish_k_minus_h<F: FftField>(set_k: &[F], set_h: &[F]) -> DensePolynomial<F> {
-    let set_k: std::collections::HashSet<_> = set_k.iter().cloned().collect();
-    let set_h: std::collections::HashSet<_> = set_h.iter().cloned().collect();
-    let diff: Vec<_> = set_k.difference(&set_h).cloned().collect();
-    polynomials::poly_vanish(&diff)
+    let poly_vanish_k: DensePolynomial<F> = polynomials::poly_u(set_k.len());
+    let poly_vanish_h: DensePolynomial<F> = polynomials::poly_u(set_h.len());
+    let (quotient, reminder) = DenseOrSparsePolynomial::divide_with_q_and_r(
+        &poly_vanish_k.into(),
+        &poly_vanish_h.into(),
+    ).unwrap();
+    if reminder != DensePolynomial::zero() {
+        panic!("The remainder of the division is not zero");
+    }
+    quotient
 }
 
 /// Compute $r_j^K(X)$, where $j = 1,..,N$ and $N=|K|$.
@@ -93,7 +96,8 @@ pub fn poly_q_j<F: FftField>(
     let list_lagrange_polys = polynomials::poly_lagrange_basis_all(set_k);
     let t_x = polynomials::poly_t(table, set_k);
 
-    let vanish_k = polynomials::poly_vanish(set_k);
+    let vanish_k: DensePolynomial<F> = polynomials::poly_u(set_k.len());
+    
 
 
     for (i, _) in set_k.iter().enumerate() {
@@ -124,11 +128,13 @@ pub fn derive<E: PairingEngine>(
 ) -> (EvaluationKey<E>, VerificationKey<E>, E::G2Affine, E::Fr) {
 
     let big_n1 = srs1.len()-1;
-    // let big_n2 = srs2.len();
+    // let big_n2 = srs2.len()-1;
 
+    //create two groups of elements
     let set_k = GeneralEvaluationDomain::<E::Fr>::new(big_n).unwrap();
     let set_h = GeneralEvaluationDomain::<E::Fr>::new(small_n).unwrap();
 
+    //convert the elements to vectors
     let set_k: Vec<E::Fr> = set_k.elements().collect();
     let set_h: Vec<E::Fr> = set_h.elements().collect();
 
@@ -154,7 +160,7 @@ pub fn derive<E: PairingEngine>(
     let commit_poly_u2 = Kzg::<E>::commit_g2(&srs2, &poly_u).into();
 
 
-    let poly_v = polynomials::poly_vanish(&set_k);
+    let poly_v = polynomials::poly_u(set_k.len());
     let commit_poly_v = Kzg::<E>::commit_g1(&srs1, &poly_v).into();
 
     let s_poly_v = polynomials::poly_x_vanish(&set_k);

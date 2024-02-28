@@ -11,27 +11,27 @@ use ark_poly::{
 // DensePolynomial: polynomial written in the form of its coefficients including zero coefficient.
 
 /// Vanishing polynomial on a set
-pub fn poly_vanish<F: FftField>(set: &[F]) -> DensePolynomial<F> {
-    // polynomial = 1
-    let mut polynomial = DensePolynomial::from_coefficients_slice(&[F::one()]);
+// pub fn poly_vanish<F: FftField>(set: &[F]) -> DensePolynomial<F> {
+//     // polynomial = 1
+//     let mut polynomial = DensePolynomial::from_coefficients_slice(&[F::one()]);
 
-    // Iterate over the set
-    for (i, _) in set.iter().enumerate() {
-        let x_i = set[i];
+//     // Iterate over the set
+//     for (i, _) in set.iter().enumerate() {
+//         let x_i = set[i];
 
-        // x_minus_xi = X-xi
-        let x_minus_xi = DensePolynomial::from_coefficients_slice(&[-x_i, F::one()]);
+//         // x_minus_xi = X-xi
+//         let x_minus_xi = DensePolynomial::from_coefficients_slice(&[-x_i, F::one()]);
 
-        polynomial = &polynomial * &x_minus_xi;
-    }
+//         polynomial = &polynomial * &x_minus_xi;
+//     }
 
-    // Return the vanishing polynomial
-    polynomial
-}
+//     // Return the vanishing polynomial
+//     polynomial
+// }
 
 /// Vanishing polynomial multiplies by X
 pub fn poly_x_vanish<F: FftField>(set: &[F]) -> DensePolynomial<F> {
-    let poly = poly_vanish(set);
+    let poly = poly_u(set.len());
     &poly * &DensePolynomial::from_coefficients_slice(&[F::zero(), F::one()])
 }
 
@@ -80,7 +80,8 @@ pub fn poly_lagrange_basis_all<F: FftField>(set: &[F]) -> Vec<DensePolynomial<F>
     list_lagrange_polys
 }
 
-/// If a set is a subgroup of size n in a finite field, the vanishing polynomial on this set is poly_u = $U(X) = X^n-1$
+/// $$U(X)=X^n-1$$
+/// The vanishing polynomial on a subgroup of order n in a finite field equal $U(X) = X^n-1$.
 pub fn poly_u<F: FftField>(n: usize) -> DensePolynomial<F> {
     let mut coefficients = vec![F::zero(); n+1];
     coefficients[0] = -F::one();
@@ -116,7 +117,7 @@ pub fn poly_f<F: FftField>(
     for (i, _) in set.iter().enumerate() {
         f = &f + &(&list_lagrange_polys[i] * vector_f[i]);
     }
-    let result = f + rho * &poly_vanish(set);
+    let result = f + rho * &poly_u(set.len());
     result
 }
 
@@ -141,6 +142,30 @@ pub fn poly_m<F: FftField>(vector_m: &Vec<F>, set_k: &[F], rho_m: F) -> DensePol
     for (i, _) in set_k.iter().enumerate() {
         f = &f + &(&list_lagrange_polys[i] * vector_m[i]);
     }
-    let result = f + &DensePolynomial::from_coefficients_slice(&[rho_m]) * &poly_vanish(set_k);
+    let result = f + &DensePolynomial::from_coefficients_slice(&[rho_m]) * &poly_u(set_k.len());
     result
+}
+#[cfg(test)]
+pub mod test_polynomials{
+    use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
+    use ark_bn254::Fr;
+    use std::collections::HashSet;
+    #[test]
+    fn test_evaluation_domain(){
+        let n = 8;
+        let domain = GeneralEvaluationDomain::<Fr>::new(n).unwrap();
+        let set:Vec<Fr> = domain.elements().collect();
+        
+        let g = set[1];
+        let set1: HashSet<Fr> = set.into_iter().collect();
+        let mut element = g;
+        let mut set2 = std::collections::HashSet::new();
+        for _ in 1..n+1{
+            element =g* element;
+            set2.insert(element);
+        }
+        dbg!(&set1);
+        dbg!(&set2);
+        let sets_are_equal = set1.len() == set2.len() && set1.iter().all(|elem| set2.contains(elem));
+        println!("Are the sets equal?: {}", sets_are_equal);    }
 }

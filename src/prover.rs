@@ -70,8 +70,8 @@ pub fn prove<E: PairingEngine>(
     // Compute the Lagrange basis polynomials and the vanishing polynomial over K and H
     let poly_lagrange_k = polynomials::poly_lagrange_basis_all(&set_k);
     // let poly_lagrange_h = polynomials::poly_lagrange_basis_all(&set_h);
-    let poly_vanish_k = polynomials::poly_vanish(&set_k);
-    let poly_vanish_h = polynomials::poly_vanish(&set_h);
+    let poly_vanish_k = polynomials::poly_u(set_k.len());
+    let poly_vanish_h = polynomials::poly_u(set_h.len());
 
     // Compute the commitment of Lagrange basis polynomials and the vanishing polynomial
     let commit_lagrange_k: Vec<E::G1Affine> = poly_lagrange_k
@@ -110,7 +110,7 @@ pub fn prove<E: PairingEngine>(
     // Second, Compute the polynomial $S(X)$ and the commitment $[S(s)]_1$
     let poly_s_s = &DensePolynomial::from_coefficients_slice(&[E::Fr::zero(), E::Fr::one()])
         .mul(random_r_s)
-        + &polynomials::poly_vanish(&set_k).mul(random_rho_s);
+        + &polynomials::poly_u(set_k.len()).mul(random_rho_s);
     let commit_poly_s_s = Kzg::<E>::commit_g1(&srs1, &poly_s_s).into();
 
     // Random beta
