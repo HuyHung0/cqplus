@@ -97,7 +97,9 @@ pub fn prove<E: PairingEngine>(
     // Second way: Commit to the basis lagrange polynomials and the vanishing polynomial and take the linear combination of the commitments.
     let mut commit_poly_m = E::G1Affine::zero();
     for i in 0..big_n {
+        if m[i] != E::Fr::zero() {
         commit_poly_m = commit_poly_m + commit_lagrange_k[i].mul(m[i]).into();
+        }
     }
     commit_poly_m = commit_poly_m + commit_vanish_k.mul(random_rho_m).into();
 
