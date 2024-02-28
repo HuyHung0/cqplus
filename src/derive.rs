@@ -107,12 +107,14 @@ pub fn poly_q_j<F: FftField>(
         // l_i is the i-th Lagrange basis polynomial over the domain K
 
         let numerator = &(t_x.clone() + poly_t_i) * l_i;
-        let (quotient, _reminder) = DenseOrSparsePolynomial::divide_with_q_and_r(
+        let (quotient, reminder) = DenseOrSparsePolynomial::divide_with_q_and_r(
             &numerator.into(),
             &vanish_k.clone().into(),
         )
         .unwrap();
-
+    if reminder != DensePolynomial::zero() {
+        panic!("The remainder of the division is not zero");
+    }
         r.push(quotient);
     }
     r

@@ -191,11 +191,14 @@ pub fn prove<E: PairingEngine>(
     let poly_f_plus_beta = poly_f + DensePolynomial::from_coefficients_slice(&[beta]);
     let numerator =
         &poly_b * &poly_f_plus_beta + DensePolynomial::from_coefficients_slice(&[-E::Fr::one()]);
-    let (quotient, _reminder) = DenseOrSparsePolynomial::divide_with_q_and_r(
+    let (quotient, reminder) = DenseOrSparsePolynomial::divide_with_q_and_r(
         &numerator.into(),
         &poly_vanish_h.clone().into(),
     )
     .unwrap();
+    if reminder != DensePolynomial::zero() {
+        panic!("The remainder of the division is not zero");
+    }
     let poly_q_b: DensePolynomial<E::Fr> = quotient;
 
     // Compute commitment $[Q_B(s)]_1$
@@ -223,11 +226,14 @@ pub fn prove<E: PairingEngine>(
     let enumerator =
         &poly_b - &DensePolynomial::from_coefficients_slice(&[b_gamma]) + poly_d.mul(eta);
     let denominator = DensePolynomial::from_coefficients_slice(&[-gamma, E::Fr::one()]);
-    let (quotient, _reminder) = DenseOrSparsePolynomial::divide_with_q_and_r(
+    let (quotient, reminder) = DenseOrSparsePolynomial::divide_with_q_and_r(
         &enumerator.into(),
         &denominator.clone().into(),
     )
     .unwrap();
+    if reminder != DensePolynomial::zero() {
+        panic!("The remainder of the division is not zero");
+    }
     let poly_p: DensePolynomial<E::Fr> = quotient;
 
     // commit [s-gamma]_2
