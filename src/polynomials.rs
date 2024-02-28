@@ -1,5 +1,7 @@
 //! Contains some polynomials and functions using for implementation. It is similar to the derive function describe in the paper.
 
+use std::vec;
+
 use ark_ff::FftField;
 
 use crate::table::Table;
@@ -114,7 +116,7 @@ pub fn poly_f<F: FftField>(
 ) -> DensePolynomial<F> {
     let mut f = DensePolynomial::from_coefficients_slice(&[F::zero()]);
     let list_lagrange_polys = poly_lagrange_basis_all(set);
-    for (i, _) in set.iter().enumerate() {
+    for i in 0..vector_f.len() {
         f = &f + &(&list_lagrange_polys[i] * vector_f[i]);
     }
     let result = f + rho * &poly_u(set.len());
@@ -147,25 +149,48 @@ pub fn poly_m<F: FftField>(vector_m: &Vec<F>, set_k: &[F], rho_m: F) -> DensePol
 }
 #[cfg(test)]
 pub mod test_polynomials{
+    use ark_ff::One;
     use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
     use ark_bn254::Fr;
-    use std::collections::HashSet;
     #[test]
+    /// Check if in a GeneralEvaluationDomain from ark-poly, the elements are the corresponding powers of the generator (which is the element at index 1)
     fn test_evaluation_domain(){
         let n = 8;
         let domain = GeneralEvaluationDomain::<Fr>::new(n).unwrap();
+        
+        // Convert into vector
         let set:Vec<Fr> = domain.elements().collect();
         
+        // Get the generator at index 1
         let g = set[1];
-        let set1: HashSet<Fr> = set.into_iter().collect();
-        let mut element = g;
-        let mut set2 = std::collections::HashSet::new();
-        for _ in 1..n+1{
-            element =g* element;
-            set2.insert(element);
+        println!("Let choose the element at index 1 as the generator:");
+
+
+
+        let mut id = Fr::one();
+        for i in 1..n{
+            id = id * g;
+            if id == set[i]{
+                println!("Element at index {i} is the corresponding power {i} of the generator");
+            } else {
+                panic!("Element at index {i} is not the corresponding power {i} of the generator")
+            }
         }
-        dbg!(&set1);
-        dbg!(&set2);
-        let sets_are_equal = set1.len() == set2.len() && set1.iter().all(|elem| set2.contains(elem));
-        println!("Are the sets equal?: {}", sets_are_equal);    }
+        
+        // Check the power n of the generator
+        id = id * g;
+
+        if id == Fr::one(){
+            println!("Power {n} of the generator is the field identity element");
+        } else {
+            panic!("Power {n} of the generator is not the field identity element")
+        }
+
+        // Check the element at index 0 equals the identity element
+        if set[0] == Fr::one(){
+            println!("Element at index 0 is the field identity element");
+        } else {
+            panic!("Element at index 0 is not the field identity element")
+        }
+    }
 }
