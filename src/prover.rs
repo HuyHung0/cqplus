@@ -160,7 +160,7 @@ pub fn prove<E: PairingEngine>(
 
     // Compute B_j
     let mut b = vec![E::Fr::zero(); small_n];
-    for i in 0..vector_f.len() - 1 {
+    for i in 0..vector_f.len() {
         let fi = vector_f[i];
         let f_i_plus_beta_inverse = (fi + beta).inverse().unwrap();
         let b_j = f_i_plus_beta_inverse;
