@@ -34,18 +34,16 @@ mod tests {
         small_n: usize,
         rng: &mut R,
     ) -> (
-        Table<E::Fr>,
-        Vec<E::Fr>,
-        Vec<E::G1Affine>,
-        Vec<E::G2Affine>,
-        E::Fr,
-        data_structures::VerificationKey<E>,
-        E::G2Affine,
-        E::Fr,
+        Table<E::Fr>, // Table t
+        Vec<E::Fr>, // Vector f
+        Vec<E::G1Affine>, // srs1
+        Vec<E::G2Affine>, // srs2
+        data_structures::VerificationKey<E>, // vk
+        E::G2Affine, // commit_poly_t2
+        E::Fr, // value_vartheta
     ) {
         // Generate random and srs
-        let secret_s = E::Fr::rand(rng);
-        let (srs1, srs2) = srs::unsafe_setup_from_s::<E>(big_n1, big_n2, secret_s);
+        let (srs1, srs2) = srs::unsafe_setup_from_rng::<E,R>(big_n1, big_n2, rng);
 
         let table_values: Vec<_> = (0..big_n).map(|_| E::Fr::rand(rng)).collect();
         let table_t = Table::new(&table_values).unwrap();
@@ -69,7 +67,6 @@ mod tests {
             vector_f,
             srs1,
             srs2,
-            secret_s,
             vk,
             commit_poly_t2,
             value_vartheta,
@@ -86,10 +83,10 @@ mod tests {
 
         let mut rng = test_rng();
 
-        let (table_t, vector_f, _srs1, _srs2, secret_s, vk, commit_poly_t2, value_vartheta) =
+        let (table_t, vector_f, srs1, srs2, vk, commit_poly_t2, value_vartheta) =
             prepare::<Bn254, StdRng>(big_n1, big_n2, big_n, small_n, &mut rng);
 
-        let proof = prover::prove::<Bn254>(secret_s, big_n1, big_n2, &table_t, &vector_f).unwrap();
+        let proof = prover::prove::<Bn254>(srs1, srs2, &table_t, &vector_f).unwrap();
 
         let result = verifier::verify::<Bn254>(&vk, &proof, commit_poly_t2, value_vartheta);
         assert!(result.is_ok());

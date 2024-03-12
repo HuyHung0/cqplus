@@ -14,7 +14,7 @@ use crate::{
     derive,
     error::Error,
     kzg::Kzg,
-    polynomials, srs,
+    polynomials,
     table::Table,
 };
 use ark_ff::{FftField, Field, One, UniformRand, Zero};
@@ -44,15 +44,13 @@ pub fn vector_m<F: FftField>(table_t: &Table<F>, vector_f: &Vec<F>) -> Result<Ve
 ///
 /// TODO: find replacement for a secure random number generator.
 pub fn prove<E: PairingEngine>(
-    secret_s: E::Fr,
-    big_n1: usize,
-    big_n2: usize,
+    srs1: Vec<E::G1Affine>,
+    srs2: Vec<E::G2Affine>,
     table_t: &Table<E::Fr>,
     vector_f: &Vec<E::Fr>,
 ) -> Result<Proof<E>, Error> {
-    // Create srs
-    let (srs1, srs2) = srs::unsafe_setup_from_s::<E>(big_n1, big_n2, secret_s);
-
+    let big_n1 = srs1.len() - 1;
+    let big_n2 = srs2.len() - 1;
     // get the values N and n
     let big_n = table_t.size;
     let small_n = vector_f.len();
@@ -156,7 +154,6 @@ pub fn prove<E: PairingEngine>(
     let random_rho_bx_1 = E::Fr::rand(&mut rng);
     let poly_random_rho_bx =
         DensePolynomial::from_coefficients_slice(&[random_rho_bx_0, random_rho_bx_1]);
-    // let evaluate_poly_rho_bx_at_s = poly_random_rho_bx.evaluate(&secret_s);
 
     // Compute B_j
     let mut b = vec![E::Fr::zero(); small_n];
@@ -165,7 +162,6 @@ pub fn prove<E: PairingEngine>(
         let f_i_plus_beta_inverse = (fi + beta).inverse().unwrap();
         let b_j = f_i_plus_beta_inverse;
         b[i] = b_j;
-        dbg!(&i);
     }
 
     // Compute polynomial B(X)
