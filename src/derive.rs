@@ -125,16 +125,20 @@ pub fn derive<E: PairingEngine>(
     srs1: &Vec<E::G1Affine>,
     srs2: &Vec<E::G2Affine>,
     table: &Table<E::Fr>,
-    big_n: usize,
-    small_n: usize,
-) -> (EvaluationKey<E>, VerificationKey<E>, E::G2Affine, E::Fr) {
+    set_k: &GeneralEvaluationDomain<E::Fr>,
+    set_h: &GeneralEvaluationDomain<E::Fr>,
+) -> (EvaluationKey<E>, // Evaluation Key
+    VerificationKey<E>, // Verification Key
+    E::G2Affine, // commit_poly_t2
+    E::Fr // value_vartheta
+) {
+    let big_n = set_k.size();
+    let small_n = set_h.size();
 
     let big_n1 = srs1.len()-1;
-    // let big_n2 = srs2.len()-1;
-
-    //create two groups of elements
-    let set_k = GeneralEvaluationDomain::<E::Fr>::new(big_n).unwrap();
-    let set_h = GeneralEvaluationDomain::<E::Fr>::new(small_n).unwrap();
+    // //create two groups of elements
+    // let set_k = GeneralEvaluationDomain::<E::Fr>::new(big_n).unwrap();
+    // let set_h = GeneralEvaluationDomain::<E::Fr>::new(small_n).unwrap();
 
     //convert the elements to vectors
     let set_k: Vec<E::Fr> = set_k.elements().collect();

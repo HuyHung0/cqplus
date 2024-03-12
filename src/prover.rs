@@ -10,8 +10,7 @@ use std::cmp::min;
 use std::ops::Mul;
 
 use crate::{
-    data_structures::Proof,
-    derive,
+    data_structures::{self, Proof},
     error::Error,
     kzg::Kzg,
     polynomials,
@@ -48,6 +47,10 @@ pub fn prove<E: PairingEngine>(
     srs2: Vec<E::G2Affine>,
     table_t: &Table<E::Fr>,
     vector_f: &Vec<E::Fr>,
+    set_k: &GeneralEvaluationDomain<E::Fr>,
+    set_h: &GeneralEvaluationDomain<E::Fr>,
+    ek: &data_structures::EvaluationKey<E>,
+    vartheta: E::Fr,
 ) -> Result<Proof<E>, Error> {
     let big_n1 = srs1.len() - 1;
     let big_n2 = srs2.len() - 1;
@@ -56,8 +59,8 @@ pub fn prove<E: PairingEngine>(
     let small_n = vector_f.len();
 
     // Create the group K and H of size N and n respectively
-    let set_k = GeneralEvaluationDomain::<E::Fr>::new(big_n).unwrap();
-    let set_h = GeneralEvaluationDomain::<E::Fr>::new(small_n).unwrap();
+    // let set_k = GeneralEvaluationDomain::<E::Fr>::new(big_n).unwrap();
+    // let set_h = GeneralEvaluationDomain::<E::Fr>::new(small_n).unwrap();
     let set_k: Vec<E::Fr> = set_k.elements().collect();
     let set_h: Vec<E::Fr> = set_h.elements().collect();
 
@@ -146,7 +149,7 @@ pub fn prove<E: PairingEngine>(
         return Err(Error::CommitmentError);
     }
     else {
-        dbg!("commit_poly_a is equal to commit_poly_a_second_way");
+        println!("commit_poly_a is equal to commit_poly_a_second_way");
     }
 
     // Create random polynomial rho_b(X) of degree less than or equal 1
@@ -239,7 +242,6 @@ pub fn prove<E: PairingEngine>(
     let commit_poly_p = Kzg::<E>::commit_g1(&srs1, &poly_p).into();
 
     // Compute commitment $[R_C^{*}(s)]_1$
-    let (ek, _, _, vartheta) = derive::derive::<E>(&srs1, &srs2, &table_t, big_n, small_n);
     let vartheta_inv = vartheta.inverse().unwrap();
 
     // Compute the first part of the commitment $[R_C^{*}(s)]_1$
