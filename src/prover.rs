@@ -213,7 +213,7 @@ pub fn prove<E: PairingEngine>(
     let commit_value_b_gamma =
         Kzg::<E>::commit_g1(&srs1, &DensePolynomial::from_coefficients_slice(&[b_gamma])).into();
 
-    // Compute $D(X)=B_\gamma.(F(X)+\beta)-1-Q_B(X)\nu_H(\gamma)$
+    // Compute $D(X)=B_\gamma.(F(X)+\beta)-1-Q_B(X)\nu_H(X)$
     let poly_d = &poly_f_plus_beta.mul(b_gamma)
         + &DensePolynomial::from_coefficients_slice(&[-E::Fr::one()])
         + &poly_q_b*&poly_vanish_h.mul(-E::Fr::one());
