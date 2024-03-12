@@ -222,8 +222,9 @@ pub fn prove<E: PairingEngine>(
     let commit_poly_d = Kzg::<E>::commit_g1(&srs1, &poly_d).into();
 
     // Compute P(X)=[(B(X)-B(\gamma))+\eta D(X)] / (X-\gamma)$
-    let enumerator =
-        &poly_b - &DensePolynomial::from_coefficients_slice(&[b_gamma]) + poly_d.mul(eta);
+    let enumerator = &poly_b + &DensePolynomial::from_coefficients_slice(&[-b_gamma]) + poly_d.mul(eta);
+    
+
     let denominator = DensePolynomial::from_coefficients_slice(&[-gamma, E::Fr::one()]);
     let (quotient, reminder) = DenseOrSparsePolynomial::divide_with_q_and_r(
         &enumerator.into(),
@@ -332,4 +333,48 @@ pub fn prove<E: PairingEngine>(
         value_gamma: gamma,
         value_eta: eta,
     })
+}
+#[cfg(test)]
+pub mod test_prover{
+
+    use super::*;
+
+    use ark_bn254::Fr;
+
+
+    #[test]
+    fn test_vector_m() {
+        let two: usize = 2;
+        let big_n = two.pow(3); // 8
+        let small_n = two.pow(2); // 4
+
+        // create table t=1,2,3,4,5,6,7,8
+        let mut table_values: Vec<Fr> = vec![Fr::zero(); big_n];
+        table_values[0] = Fr::one();
+        for i in 1..big_n {
+            table_values[i] = table_values[i-1]+Fr::one();
+        }
+        let table_t = Table::new(&table_values).unwrap();
+
+        // create vector f=1,1,2,3
+        let mut vector_f: Vec<Fr> = vec![Fr::zero(); small_n];
+        vector_f[0] = Fr::one();
+        vector_f[1] = Fr::one();
+        vector_f[2] = Fr::one()+Fr::one();
+        vector_f[3] = Fr::one()+Fr::one()+Fr::one();
+
+        let m = vector_m(&table_t, &vector_f).unwrap();
+        
+        // m should be [2,1,1,0,0,0,0,0]
+        assert_eq!(m[0], Fr::one()+Fr::one());
+        assert_eq!(m[1], Fr::one());
+        assert_eq!(m[2], Fr::one());
+        assert_eq!(m[3], Fr::zero());
+        assert_eq!(m[4], Fr::zero());
+        assert_eq!(m[5], Fr::zero());
+        assert_eq!(m[6], Fr::zero());
+        assert_eq!(m[7], Fr::zero());
+
+    }
+    
 }
