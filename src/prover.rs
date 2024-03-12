@@ -214,10 +214,9 @@ pub fn prove<E: PairingEngine>(
         Kzg::<E>::commit_g1(&srs1, &DensePolynomial::from_coefficients_slice(&[b_gamma])).into();
 
     // Compute $D(X)=B_\gamma.(F(X)+\beta)-1-Q_B(X)\nu_H(\gamma)$
-    let evaluate_vanish_h_at_gamma = poly_vanish_h.evaluate(&gamma);
     let poly_d = &poly_f_plus_beta.mul(b_gamma)
         + &DensePolynomial::from_coefficients_slice(&[-E::Fr::one()])
-        + poly_q_b.mul(evaluate_vanish_h_at_gamma);
+        + &poly_q_b*&poly_vanish_h.mul(-E::Fr::one());
 
     // Compute commitment $[D(s)]_1$
     let commit_poly_d = Kzg::<E>::commit_g1(&srs1, &poly_d).into();
